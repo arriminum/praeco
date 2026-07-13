@@ -12,9 +12,10 @@
 #   silent         Optional literal "silent" to suppress Telegram's API
 #                  response from being printed to stdout on success.
 #
-# A "[praeco] hash: <16 hex chars>" line is always printed to stderr before
-# sending, matching the hash= field logged for this attempt, so it can be
-# used to correlate a run with its log line during debugging.
+# A "[praeco] id: <16 hex chars>" line is always printed to stderr before
+# sending, matching the id= field logged for this attempt. It is a random
+# transaction id (not derived from the message), so it can be used to find
+# the exact log line for a given run during debugging.
 #
 # Configuration is read from $PRAECO_ENV_FILE (default:
 # /etc/praeco/.env-telegram), which must define PRAECO_TOKEN and
@@ -73,9 +74,9 @@ MSG="$1"
 SILENT="${2:-}"
 
 CALLER_USER="$(id -un 2>/dev/null || whoami 2>/dev/null || echo unknown)"
-MSG_HASH="$(printf '%s' "$MSG" | sha256sum | cut -c1-16)"
-CTX="user=${CALLER_USER} source=${SOURCE:-none} hash=${MSG_HASH}"
-echo "[praeco] hash: $MSG_HASH" >&2
+TXN_ID="$(od -An -tx1 -N8 /dev/urandom | tr -d ' \n')"
+CTX="user=${CALLER_USER} source=${SOURCE:-none} id=${TXN_ID}"
+echo "[praeco] id: $TXN_ID" >&2
 
 if [ ! -r "$ENV_FILE" ]; then
     echo "[praeco] Error: env file $ENV_FILE not found or not readable" >&2

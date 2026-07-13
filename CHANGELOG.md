@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-07-13
+
+### Changed
+
+- praeco: the per-attempt `hash=` log field (a SHA-256 prefix of the message text) is now `id=`, a random 16-character transaction id generated fresh from `/dev/urandom` on every call, and the stderr line changed from `[praeco] hash: ...` to `[praeco] id: ...` to match. A content hash collided whenever the same alert text repeated (the common case for cron alerts), which defeated its purpose of pinpointing one specific run in the log; a random id is unique per call regardless of message content.
+
 ## [0.4.0] — 2026-07-13
 
 ### Added

@@ -21,13 +21,13 @@ Both scripts accept an environment variable override if you need a different pat
 One line per event, with timestamp, script name, and status:
 
 ```
-2026-07-12 14:03:11 [praeco] OK message sent (user=alice source=backup-script hash=3f9a1c2b8e7d4f01)
-2026-07-12 14:05:44 [praeco] ERROR Telegram API returned HTTP 401 (user=alice source=none hash=9c0e2a7b1d4f5601)
+2026-07-12 14:03:11 [praeco] OK message sent (user=alice source=backup-script id=3f9a1c2b8e7d4f01)
+2026-07-12 14:05:44 [praeco] ERROR Telegram API returned HTTP 401 (user=alice source=none id=9c0e2a7b1d4f5601)
 2026-07-12 03:00:02 [praecomail] Sending email to ops@example.com (subject: Disk usage warning)
 2026-07-12 03:00:03 [praecomail] OK email sent to ops@example.com
 ```
 
-Message *contents* are never logged, only metadata: timestamp, status, recipient/subject for praecomail, and for praeco the calling user (`user=`), the `--source` label if any (`source=none` when omitted), and a 16-character SHA-256 prefix of the message text (`hash=`). The hash lets you confirm two log lines correspond to the same message (or spot that a "duplicate-looking" alert actually changed) without ever storing or exposing the message content itself. This keeps the log useful for auditing delivery and troubleshooting without unnecessarily duplicating potentially sensitive alert text.
+Message *contents* are never logged, only metadata: timestamp, status, recipient/subject for praecomail, and for praeco the calling user (`user=`), the `--source` label if any (`source=none` when omitted), and a random 16-character transaction id (`id=`), generated fresh from `/dev/urandom` on every call. The id is not derived from the message, user, or source — it exists purely to let you find the exact log line for a specific run (e.g. by printing it in a script and grepping for it later), even when the same alert text is sent repeatedly or from multiple sources. This keeps the log useful for auditing delivery and troubleshooting without ever storing or exposing the message content itself.
 
 ## Permissions
 

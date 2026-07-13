@@ -14,7 +14,7 @@ praeco --version
 - `message` — required. Text to send. Telegram Markdown is supported (`*bold*`, `_italic_`, `` `code` ``, etc). Long messages are fine; Telegram enforces a limit (~4000 characters for a single message).
 - `silent` — optional. Literal word `silent`. When present, praeco suppresses Telegram's JSON response from stdout on success. Errors always print to stderr regardless of this flag.
 
-Before attempting to send, praeco always prints a `[praeco] hash: <16 hex chars>` line to stderr, regardless of the `silent` flag. This is the same value logged as `hash=` in [docs/audit.md](audit.md), so you can match a terminal run to its log line when debugging without praeco ever storing or printing the message content itself.
+Before attempting to send, praeco always prints a `[praeco] id: <16 hex chars>` line to stderr, regardless of the `silent` flag. This is a random transaction id, not derived from the message, matching the value logged as `id=` in [docs/audit.md](audit.md), so you can match a terminal run to its log line when debugging.
 
 Exit status is 0 on success; non-zero if the message could not be sent (missing config, unreachable API, or a non-200 response from Telegram), so it is safe to chain with `&&`/`||` in scripts and cron jobs.
 
