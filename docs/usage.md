@@ -9,10 +9,12 @@ praeco [--source NAME] "message" [silent]
 praeco --version
 ```
 
-- `--source NAME` — optional. Label identifying the caller (app, site, script). Prefixed to the message as `[NAME]` followed by a space, so you don't need to repeat it inside the message text. Quote `NAME` if it contains spaces: `--source "hqjury web"`. Also accepts `--source=NAME`.
+- `--source NAME` — optional. Label identifying the caller (app, site, script). Prefixed to the message as bold `NAME:` followed by a space, so you don't need to repeat it inside the message text. Quote `NAME` if it contains spaces: `--source "hqjury web"`. Also accepts `--source=NAME`. Must come before `message` — praeco stops looking for options at the first non-option argument, so `praeco "message" --source NAME` will NOT apply the source tag.
 - `--version` — optional. Prints `praeco <version>` and exits, reading from the `VERSION` file installed alongside the script (override with `$PRAECO_VERSION_FILE`).
 - `message` — required. Text to send. Telegram Markdown is supported (`*bold*`, `_italic_`, `` `code` ``, etc). Long messages are fine; Telegram enforces a limit (~4000 characters for a single message).
 - `silent` — optional. Literal word `silent`. When present, praeco suppresses Telegram's JSON response from stdout on success. Errors always print to stderr regardless of this flag.
+
+Before attempting to send, praeco always prints a `[praeco] hash: <16 hex chars>` line to stderr, regardless of the `silent` flag. This is the same value logged as `hash=` in [docs/audit.md](audit.md), so you can match a terminal run to its log line when debugging without praeco ever storing or printing the message content itself.
 
 Exit status is 0 on success; non-zero if the message could not be sent (missing config, unreachable API, or a non-200 response from Telegram), so it is safe to chain with `&&`/`||` in scripts and cron jobs.
 
@@ -24,7 +26,7 @@ praeco "Database query failed at $(date)" silent
 praeco --source fabius "3 repositories with pending commits"
 ```
 
-The last example arrives in Telegram as `[fabius] 3 repositories with pending commits`.
+The last example arrives in Telegram as **fabius:** 3 repositories with pending commits (bold source label). A plain `[NAME]` prefix isn't used because Telegram's Markdown parser treats `[...]` as link syntax and silently strips it when there's no following `(url)`.
 
 ## praecomail — send an email alert
 
@@ -76,7 +78,7 @@ Both commands log every attempt (success or failure) to `/var/log/praeco/`. See 
 - `praeco.log` — overridable with `$PRAECO_LOG_FILE`.
 - `praecomail.log` — overridable with `$PRAECOMAIL_LOG_FILE`.
 
-The log directory is created with the setgid bit (mode 2750, owner root:praeco) so every log file written into it inherits the `praeco` group automatically, regardless of which user or cron job invokes the commands.
+The log directory is created with the setgid bit (mode 2770, owner root:praeco) so every log file written into it inherits the `praeco` group automatically, and group members can write to it, regardless of which user or cron job invokes the commands.
 
 ## Cron examples
 

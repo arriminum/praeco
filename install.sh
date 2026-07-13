@@ -85,7 +85,12 @@ chmod 750 "$ENV_DIR"
 
 echo "[install] Setting up log directory $LOG_DIR..."
 chown root:"$GROUP" "$LOG_DIR"
-chmod 2750 "$LOG_DIR"
+chmod 2770 "$LOG_DIR"
+for logfile in "$LOG_DIR"/*.log; do
+    [ -f "$logfile" ] || continue
+    chown root:"$GROUP" "$logfile"
+    chmod 660 "$logfile"
+done
 
 TARGET_USER="${SUDO_USER:-}"
 if [ -n "$TARGET_USER" ] && [ "$TARGET_USER" != "root" ] && [ -t 0 ]; then
@@ -114,7 +119,7 @@ $LOG_DIR/*.log {
     compress
     missingok
     notifempty
-    create 640 root $GROUP
+    create 660 root $GROUP
 }
 EOF
 

@@ -6,11 +6,15 @@
 #        praeco --version
 #
 #   --source NAME  Optional label identifying the caller (app, site, script).
-#                  Prefixed to the message as "[NAME] ".
+#                  Prefixed to the message as bold "NAME: " text.
 #   --version      Print the installed version and exit.
 #   message        Text to send (required). Telegram Markdown is supported.
 #   silent         Optional literal "silent" to suppress Telegram's API
 #                  response from being printed to stdout on success.
+#
+# A "[praeco] hash: <16 hex chars>" line is always printed to stderr before
+# sending, matching the hash= field logged for this attempt, so it can be
+# used to correlate a run with its log line during debugging.
 #
 # Configuration is read from $PRAECO_ENV_FILE (default:
 # /etc/praeco/.env-telegram), which must define PRAECO_TOKEN and
@@ -65,9 +69,17 @@ if [ "$#" -lt 1 ] || [ -z "$1" ]; then
     exit 1
 fi
 
+MSG="$1"
+SILENT="${2:-}"
+
+CALLER_USER="$(id -un 2>/dev/null || whoami 2>/dev/null || echo unknown)"
+MSG_HASH="$(printf '%s' "$MSG" | sha256sum | cut -c1-16)"
+CTX="user=${CALLER_USER} source=${SOURCE:-none} hash=${MSG_HASH}"
+echo "[praeco] hash: $MSG_HASH" >&2
+
 if [ ! -r "$ENV_FILE" ]; then
     echo "[praeco] Error: env file $ENV_FILE not found or not readable" >&2
-    log "ERROR env file $ENV_FILE not found or not readable"
+    log "ERROR env file $ENV_FILE not found or not readable ($CTX)"
     exit 1
 fi
 
@@ -76,15 +88,14 @@ fi
 
 if [ -z "${PRAECO_TOKEN:-}" ] || [ -z "${PRAECO_CHAT_ID:-}" ]; then
     echo "[praeco] Error: PRAECO_TOKEN and PRAECO_CHAT_ID must be set in $ENV_FILE" >&2
-    log "ERROR PRAECO_TOKEN or PRAECO_CHAT_ID missing in $ENV_FILE"
+    log "ERROR PRAECO_TOKEN or PRAECO_CHAT_ID missing in $ENV_FILE ($CTX)"
     exit 1
 fi
 
-MSG="$1"
-SILENT="${2:-}"
-
 if [ -n "$SOURCE" ]; then
-    MSG="[$SOURCE] $MSG"
+    # Square brackets are Markdown link syntax; Telegram silently strips a
+    # "[NAME]" prefix with no following "(url)". Bold text has no such clash.
+    MSG="*${SOURCE}:* $MSG"
 fi
 
 RESPONSE_FILE="/tmp/praeco-response.$$"
@@ -95,7 +106,7 @@ HTTP_CODE=$(curl -s -X POST -o "$RESPONSE_FILE" -w '%{http_code}' \
     -d "parse_mode=Markdown" \
     --data-urlencode "text=${MSG}") || {
     echo "[praeco] Error: curl failed to reach Telegram API" >&2
-    log "ERROR curl failed to reach Telegram API"
+    log "ERROR curl failed to reach Telegram API ($CTX)"
     rm -f "$RESPONSE_FILE"
     exit 1
 }
@@ -103,14 +114,16 @@ HTTP_CODE=$(curl -s -X POST -o "$RESPONSE_FILE" -w '%{http_code}' \
 if [ "$HTTP_CODE" != "200" ]; then
     echo "[praeco] Error: Telegram API returned HTTP $HTTP_CODE" >&2
     cat "$RESPONSE_FILE" >&2
-    log "ERROR Telegram API returned HTTP $HTTP_CODE"
+    echo >&2
+    log "ERROR Telegram API returned HTTP $HTTP_CODE ($CTX)"
     rm -f "$RESPONSE_FILE"
     exit 1
 fi
 
 if [ "$SILENT" != "silent" ]; then
     cat "$RESPONSE_FILE"
+    echo
 fi
 
 rm -f "$RESPONSE_FILE"
-log "OK message sent"
+log "OK message sent ($CTX)"

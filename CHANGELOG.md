@@ -6,7 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
-(No unreleased changes at this time.)
+## [0.4.0] — 2026-07-13
+
+### Added
+
+- praeco: log lines now include the calling user (`user=`), the `--source` label if any (`source=none` when omitted), and a 16-character SHA-256 prefix of the message text (`hash=`), so send attempts can be traced back to a caller and correlated across log lines without ever storing the message content itself.
+- praeco: now prints a `[praeco] hash: <16 hex chars>` line to stderr before sending, matching the `hash=` field logged for that attempt, so a terminal run can be matched to its log line during debugging.
+
+### Fixed
+
+- install.sh: `/var/log/praeco` is now created with mode 2770 instead of 2750, and logrotate now recreates rotated logs with mode 660 instead of 640, so non-root members of the `praeco` group can actually write to the log files (previously they could only read them, so `praeco`/`praecomail` failed with "Permission denied" writing to the log after a member ran the commands without `sudo`). Re-run `install.sh` on existing installs to pick up the new permissions.
+- praeco: `--source NAME` now prefixes the message with bold `NAME:` text instead of `[NAME]`. Telegram's Markdown parser treats `[NAME]` as link syntax and silently strips the brackets when there's no following `(url)`, so the source tag was never actually visible in delivered messages.
+- praeco: the Telegram API response (or its error body) is now followed by a newline when printed, so the shell prompt no longer runs together with the JSON on the same line.
 
 ## [0.3.0] — 2026-07-13
 
