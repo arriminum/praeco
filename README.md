@@ -124,4 +124,4 @@ git@github.com:arriminum/praeco.git
 
 ## License
 
-Proprietary — © Arriminum. Internal use only.
+MIT License — © 2025 Arriminum. See [LICENSE](LICENSE) for details.
