@@ -1,0 +1,53 @@
+
+# ----- OS
+
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+Desktop.ini
+
+
+
+# ---- Logs and temp files
+
+*.log
+*.tmp
+*.bak
+*.swp
+*.pid
+*.seed
+*.orig
+*~
+
+
+
+# ----- Editors
+
+*.sublime-project
+*.sublime-workspace
+.idea/
+
+
+
+# ----- Cache
+
+cache/
+tmp/
+sessions/
+
+
+
+# ----- Build/Deploy
+build/
+deploy/
+dist/*
+dist/*.zip
+!dist/.gitkeep
+
+
+
+# ----- Agents
+.claude/todos
+.codex
+.agents

@@ -1,0 +1,30 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "editor.defaultFormatter": "foxundermoon.shell-format",
+    "editor.formatOnSave": false,
+    "files.associations": {
+      "*.sh": "shellscript",
+      ".env*": "shellscript",
+      "update": "shellscript",
+      "deploy": "shellscript"
+    },
+    "shellcheck.enable": true,
+    "shellformat.flag": "-i 2",
+    "extensions.ignoreRecommendations": false
+  },
+  "extensions": {
+    "recommendations": [
+      "foxundermoon.shell-format",
+      "timonwong.shellcheck",
+      "mads-hartmann.bash-ide-vscode",
+      "mkhl.shfmt",
+      "oderwat.indent-rainbow",
+      "usernamehw.errorlens"
+    ]
+  }
+}

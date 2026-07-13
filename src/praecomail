@@ -1,0 +1,52 @@
+#!/bin/sh
+#
+# praecomail - send a plain-text email alert via msmtp.
+#
+# Usage: praecomail recipient@domain.com "subject" "message"
+#
+# Configuration is read from $PRAECO_ENV_FILE (default:
+# /etc/praeco/.env-telegram), which may define PRAECOMAIL_FROM (the From
+# address). See docs/usage.md for details.
+
+set -eu
+
+ENV_FILE="${PRAECO_ENV_FILE:-/etc/praeco/.env-telegram}"
+LOG_FILE="${PRAECOMAIL_LOG_FILE:-/var/log/praeco/praecomail.log}"
+
+log() {
+    printf '%s [praecomail] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" >>"$LOG_FILE" 2>/dev/null || true
+}
+
+DEST="${1:-}"
+SUBJECT="${2:-}"
+MSG="${3:-}"
+
+if [ -z "$DEST" ] || [ -z "$SUBJECT" ] || [ -z "$MSG" ]; then
+    echo "Usage: $0 recipient@domain.com \"subject\" \"message\"" >&2
+    exit 1
+fi
+
+if ! command -v msmtp >/dev/null 2>&1; then
+    echo "[praecomail] Error: msmtp is not installed" >&2
+    log "ERROR msmtp not found in PATH"
+    exit 1
+fi
+
+if [ -r "$ENV_FILE" ]; then
+    # shellcheck source=/dev/null
+    . "$ENV_FILE"
+fi
+
+FROM="${PRAECOMAIL_FROM:-praeco@$(hostname -f 2>/dev/null || hostname)}"
+
+log "Sending email to $DEST (subject: $SUBJECT)"
+
+if printf 'From: %s\nTo: %s\nSubject: %s\nDate: %s\n\n%s\n' \
+    "$FROM" "$DEST" "$SUBJECT" "$(date -R)" "$MSG" |
+    msmtp --timeout=7 -v "$DEST" >>"$LOG_FILE" 2>&1; then
+    log "OK email sent to $DEST"
+else
+    echo "[praecomail] Error: msmtp failed to send email to $DEST" >&2
+    log "ERROR msmtp failed to send email to $DEST"
+    exit 1
+fi
