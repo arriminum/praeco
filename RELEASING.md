@@ -76,10 +76,10 @@ Once version control is added:
 4. Create a **GitHub Release** from the tag (web UI or `gh release create`):
    - Paste the relevant section from `CHANGELOG.md` as the release description.
    - Optionally attach `dist/praeco-<version>.zip` as a build artifact.
-   - Add links at the end of the description (links in releases are `follow`, unlike README.md which GitHub marks as `nofollow`).
+   - Add links at the end of the description.
 
 **Tagging rule:** Always use `v` + version (e.g. `v0.1.0`, `v1.0.0`). This is the Git and GitHub convention for releases.
 
-## SEO and external links
+## External links
 
-GitHub README.md files are marked `rel="nofollow"` by default. For public projects, add important links (project homepage, organization, related projects) to the **GitHub Release description** instead — release pages are indexed as `follow` and carry more SEO weight.
+For public projects, add important links (project homepage, organization, related projects) to the **GitHub Release description**.
