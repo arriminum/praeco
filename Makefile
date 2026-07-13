@@ -36,7 +36,7 @@ version:
 
 dist: lint
 	@echo "Building $(PKG_ZIP)..."
-	@rm -rf "$(PKG_DIR)" "$(PKG_ZIP)"
+	@rm -rf "$(PKG_DIR)" "$(DIST_DIR)"/*.zip
 	@mkdir -p "$(PKG_DIR)/src" "$(PKG_DIR)/docs"
 	@cp src/praeco src/praecomail src/.env-telegram.example "$(PKG_DIR)/src/"
 	@cp install.sh Makefile VERSION README.md LICENSE CHANGELOG.md "$(PKG_DIR)/"

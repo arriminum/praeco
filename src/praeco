@@ -2,11 +2,15 @@
 #
 # praeco - send a message to Telegram via a bot.
 #
-# Usage: praeco "message" [silent]
+# Usage: praeco [--source NAME] "message" [silent]
+#        praeco --version
 #
-#   message  Text to send (required). Telegram Markdown is supported.
-#   silent   Optional literal "silent" to suppress Telegram's API response
-#            from being printed to stdout on success.
+#   --source NAME  Optional label identifying the caller (app, site, script).
+#                  Prefixed to the message as "[NAME] ".
+#   --version      Print the installed version and exit.
+#   message        Text to send (required). Telegram Markdown is supported.
+#   silent         Optional literal "silent" to suppress Telegram's API
+#                  response from being printed to stdout on success.
 #
 # Configuration is read from $PRAECO_ENV_FILE (default:
 # /etc/praeco/.env-telegram), which must define PRAECO_TOKEN and
@@ -16,13 +20,48 @@ set -eu
 
 ENV_FILE="${PRAECO_ENV_FILE:-/etc/praeco/.env-telegram}"
 LOG_FILE="${PRAECO_LOG_FILE:-/var/log/praeco/praeco.log}"
+VERSION_FILE="${PRAECO_VERSION_FILE:-/usr/local/lib/praeco/VERSION}"
 
 log() {
     printf '%s [praeco] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" >>"$LOG_FILE" 2>/dev/null || true
 }
 
+SOURCE=""
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --version)
+            if [ -r "$VERSION_FILE" ]; then
+                printf 'praeco %s\n' "$(cat "$VERSION_FILE")"
+                exit 0
+            fi
+            echo "[praeco] Error: version file $VERSION_FILE not found or not readable" >&2
+            exit 1
+            ;;
+        --source)
+            [ "$#" -ge 2 ] || { echo "[praeco] Error: --source requires a value" >&2; exit 1; }
+            SOURCE="$2"
+            shift 2
+            ;;
+        --source=*)
+            SOURCE="${1#--source=}"
+            shift
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            echo "[praeco] Error: unknown option: $1" >&2
+            exit 1
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
 if [ "$#" -lt 1 ] || [ -z "$1" ]; then
-    echo "Usage: $0 \"message\" [silent]" >&2
+    echo "Usage: $0 [--source NAME] \"message\" [silent]" >&2
     exit 1
 fi
 
@@ -43,6 +82,10 @@ fi
 
 MSG="$1"
 SILENT="${2:-}"
+
+if [ -n "$SOURCE" ]; then
+    MSG="[$SOURCE] $MSG"
+fi
 
 RESPONSE_FILE="/tmp/praeco-response.$$"
 

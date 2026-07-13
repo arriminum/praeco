@@ -28,8 +28,9 @@ See [docs/usage.md](docs/usage.md) for the full command reference.
 ## Basic usage
 
 ```bash
-praeco "Backup completed on $(hostname)!"              # send Telegram message
-praecomail ops@example.com "Subject" "Message body"    # send email
+praeco "Backup completed on $(hostname)!"                          # send Telegram message
+praeco --source fabius "3 repositories with pending commits"       # tag the origin: [fabius] ...
+praecomail ops@example.com "Subject" "Message body"                # send email
 ```
 
 Both commands read configuration from `/etc/praeco/.env-telegram`. After installing (see below), edit that file to add your Telegram token and chat ID:
@@ -42,6 +43,7 @@ Check the installed version at any time:
 
 ```bash
 praeco --version
+praecomail --version
 ```
 
 ## Notifications
@@ -73,9 +75,10 @@ sudo make install
 `install.sh`:
 
 - Checks for required dependencies (`curl`; warns if `msmtp` is missing).
-- Installs the scripts to `/usr/local/lib/praeco` and creates symlinks in `/usr/local/bin`.
+- Installs the scripts and the `VERSION` file to `/usr/local/lib/praeco` and creates symlinks in `/usr/local/bin`.
 - Creates `/etc/praeco/.env-telegram` from the example file, without overwriting an existing one.
 - Creates `/var/log/praeco` and configures logrotate to keep roughly two months of history.
+- Interactively offers to add the invoking (`sudo`) user to the `praeco` group, so they can use praeco/praecomail without `sudo`.
 - Is safe to re-run to upgrade an existing install.
 
 To uninstall:

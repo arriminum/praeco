@@ -8,6 +8,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 (No unreleased changes at this time.)
 
+## [0.3.0] — 2026-07-13
+
+### Added
+
+- praeco/praecomail: new `--version` argument that prints the installed version and exits, reading `/usr/local/lib/praeco/VERSION` (override with `$PRAECO_VERSION_FILE`).
+- install.sh: now installs the `VERSION` file to `/usr/local/lib/praeco` alongside the scripts, so `--version` works after install.
+
+### Changed
+
+- Makefile: `make dist` now removes all old `.zip` files in `dist/` before building, so only the latest package remains.
+
+## [0.2.0] — 2026-07-13
+
+### Added
+
+- praeco: new optional `--source NAME` (or `--source=NAME`) argument that prefixes the outgoing message with `[NAME]` and a space, so callers can identify themselves without editing the message text.
+- praecomail: new optional `--source NAME` (or `--source=NAME`) argument that prefixes the email subject with `[NAME]` and a space.
+
+## [0.1.1] — 2026-07-13
+
+### Added
+
+- install.sh: interactively offers to add the invoking (`sudo`) user to the `praeco` group, so they can read the env file and write logs without `sudo`. Skipped automatically when not run from a TTY or when invoked directly as root.
+
 ## [0.1.0] — 2026-07-12
 
 ### Added

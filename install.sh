@@ -40,7 +40,7 @@ if ! command -v msmtp >/dev/null 2>&1; then
     echo "[install] Warning: msmtp is not installed - praecomail will not work until it is (e.g. apt install msmtp)"
 fi
 
-for f in praeco praecomail .env-telegram.example; do
+for f in praeco praecomail .env-telegram.example VERSION; do
     [ -f "$SCRIPT_DIR/$f" ] || fail "$f not found next to install.sh"
 done
 
@@ -56,6 +56,11 @@ echo "[install] Installing scripts to $LIB_DIR..."
 cp "$SCRIPT_DIR/praeco" "$SCRIPT_DIR/praecomail" "$LIB_DIR/"
 chown root:root "$LIB_DIR/praeco" "$LIB_DIR/praecomail"
 chmod 755 "$LIB_DIR/praeco" "$LIB_DIR/praecomail"
+
+echo "[install] Installing version file to $LIB_DIR..."
+cp "$SCRIPT_DIR/VERSION" "$LIB_DIR/VERSION"
+chown root:root "$LIB_DIR/VERSION"
+chmod 644 "$LIB_DIR/VERSION"
 
 echo "[install] Linking commands into $BIN_DIR..."
 for cmd in praeco praecomail; do
@@ -81,6 +86,25 @@ chmod 750 "$ENV_DIR"
 echo "[install] Setting up log directory $LOG_DIR..."
 chown root:"$GROUP" "$LOG_DIR"
 chmod 2750 "$LOG_DIR"
+
+TARGET_USER="${SUDO_USER:-}"
+if [ -n "$TARGET_USER" ] && [ "$TARGET_USER" != "root" ] && [ -t 0 ]; then
+    if id -nG "$TARGET_USER" 2>/dev/null | tr ' ' '\n' | grep -qx "$GROUP"; then
+        echo "[install] User $TARGET_USER is already in the $GROUP group."
+    else
+        printf '[install] Add user %s to the %s group so it can use praeco/praecomail without sudo? [y/N] ' "$TARGET_USER" "$GROUP"
+        read -r REPLY
+        case "$REPLY" in
+            [yY]*)
+                usermod -aG "$GROUP" "$TARGET_USER"
+                echo "[install] Added $TARGET_USER to $GROUP. Log out and back in (or run 'newgrp $GROUP') for it to take effect."
+                ;;
+            *)
+                echo "[install] Skipped. Run 'sudo usermod -aG $GROUP <username>' later if needed."
+                ;;
+        esac
+    fi
+fi
 
 echo "[install] Configuring logrotate..."
 cat >"$LOGROTATE_CONF" <<EOF

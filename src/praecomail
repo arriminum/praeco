@@ -2,7 +2,12 @@
 #
 # praecomail - send a plain-text email alert via msmtp.
 #
-# Usage: praecomail recipient@domain.com "subject" "message"
+# Usage: praecomail [--source NAME] recipient@domain.com "subject" "message"
+#        praecomail --version
+#
+#   --source NAME  Optional label identifying the caller (app, site, script).
+#                  Prefixed to the subject as "[NAME] ".
+#   --version      Print the installed version and exit.
 #
 # Configuration is read from $PRAECO_ENV_FILE (default:
 # /etc/praeco/.env-telegram), which may define PRAECOMAIL_FROM (the From
@@ -12,18 +17,57 @@ set -eu
 
 ENV_FILE="${PRAECO_ENV_FILE:-/etc/praeco/.env-telegram}"
 LOG_FILE="${PRAECOMAIL_LOG_FILE:-/var/log/praeco/praecomail.log}"
+VERSION_FILE="${PRAECO_VERSION_FILE:-/usr/local/lib/praeco/VERSION}"
 
 log() {
     printf '%s [praecomail] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" >>"$LOG_FILE" 2>/dev/null || true
 }
+
+SOURCE=""
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --version)
+            if [ -r "$VERSION_FILE" ]; then
+                printf 'praecomail %s\n' "$(cat "$VERSION_FILE")"
+                exit 0
+            fi
+            echo "[praecomail] Error: version file $VERSION_FILE not found or not readable" >&2
+            exit 1
+            ;;
+        --source)
+            [ "$#" -ge 2 ] || { echo "[praecomail] Error: --source requires a value" >&2; exit 1; }
+            SOURCE="$2"
+            shift 2
+            ;;
+        --source=*)
+            SOURCE="${1#--source=}"
+            shift
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            echo "[praecomail] Error: unknown option: $1" >&2
+            exit 1
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
 
 DEST="${1:-}"
 SUBJECT="${2:-}"
 MSG="${3:-}"
 
 if [ -z "$DEST" ] || [ -z "$SUBJECT" ] || [ -z "$MSG" ]; then
-    echo "Usage: $0 recipient@domain.com \"subject\" \"message\"" >&2
+    echo "Usage: $0 [--source NAME] recipient@domain.com \"subject\" \"message\"" >&2
     exit 1
+fi
+
+if [ -n "$SOURCE" ]; then
+    SUBJECT="[$SOURCE] $SUBJECT"
 fi
 
 if ! command -v msmtp >/dev/null 2>&1; then
